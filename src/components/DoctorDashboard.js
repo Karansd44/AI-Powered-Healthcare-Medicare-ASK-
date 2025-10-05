@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase';
+import { collection, getDocs, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { 
   Flip, 
   Fade, 
@@ -19,10 +22,221 @@ const DoctorDashboard = () => {
   const [sortOption, setSortOption] = useState('time');
   const [filterSeverity, setFilterSeverity] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const { currentUser } = useAuth();
+  const { currentUser, getUserType } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [recentAnalyses, setRecentAnalyses] = useState([]);
+  const [uniquePatients, setUniquePatients] = useState([]);
+
+  // Navigation helper functions
+  const navigateToPatientDashboard = useCallback((patientId) => {
+    if (!patientId) {
+      console.error('Invalid patient ID');
+      return;
+    }
+    try {
+      navigate(`/patient-dashboard/${patientId}`);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to current route or show error
+    }
+  }, [navigate]);
+
+  const navigateToAllPatientRecords = useCallback(() => {
+    try {
+      navigate('/all-patient-records');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to current route or show error
+    }
+  }, [navigate]);
   
+  // Get personalized doctor greeting
+  const getPersonalizedDoctorGreeting = () => {
+    const hour = new Date().getHours();
+    let timeGreeting = "";
+    if (hour < 12) timeGreeting = "Good morning";
+    else if (hour < 17) timeGreeting = "Good afternoon";
+    else timeGreeting = "Good evening";
+    
+    const doctorName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Doctor';
+    return `${timeGreeting}, Dr. ${doctorName}`;
+  };
+
+  // Get personalized activity message for doctor
+  const getDoctorActivityMessage = () => {
+    const { totalPatients, pendingReviews, criticalCases } = statsData;
+    
+    if (criticalCases > 0) {
+      return `You have ${criticalCases} critical case${criticalCases > 1 ? 's' : ''} requiring immediate attention.`;
+    } else if (pendingReviews > 0) {
+      return `${pendingReviews} patient analysis${pendingReviews > 1 ? 'es' : ''} await${pendingReviews === 1 ? 's' : ''} your review.`;
+    } else if (totalPatients > 0) {
+      return `Your practice is running smoothly with ${totalPatients} patient${totalPatients > 1 ? 's' : ''} under care.`;
+    } else {
+      return "Welcome to your medical practice dashboard. Ready to help patients today!";
+    }
+  };
+  
+  // Fetch data with proper error handling
+  const fetchDashboardData = useCallback(async () => {
+    if (!currentUser) return;
+    
+    // Validate user type
+    const userType = getUserType();
+    if (userType !== 'doctor') {
+      setError('Access denied. This dashboard is for doctors only.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch users and their analyses
+      const usersRef = collection(db, 'users');
+      const usersSnap = await getDocs(usersRef);
+      
+      if (usersSnap.empty) {
+        console.warn('No users found in database');
+        setRecentAnalyses([]);
+        setUniquePatients([]);
+        setStatsData({
+          totalPatients: 0,
+          newPatients: 0,
+          prevNewPatients: 0,
+          pendingReviews: 0,
+          moderateReviews: 0,
+          severeReviews: 0,
+          criticalCases: 0
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const now = new Date();
+      const lastWeek = new Date(now.getTime() - 7*24*60*60*1000);
+      const prevWeek = new Date(now.getTime() - 14*24*60*60*1000);
+      
+      let totalPatients = 0;
+      let newPatients = 0;
+      let prevNewPatients = 0;
+      let pendingReviews = 0;
+      let moderateReviews = 0;
+      let severeReviews = 0;
+      let criticalCases = 0;
+      let analyses = [];
+      let patients = [];
+
+      for (const docSnap of usersSnap.docs) {
+        const data = docSnap.data();
+        
+        // Only process patient data, not doctor data
+        if (data.userType !== 'doctor') {
+          totalPatients++;
+          
+          // Add to patients list
+          patients.push({
+            id: docSnap.id,
+            name: data.fullName || data.email?.split('@')[0] || 'Unknown Patient',
+            email: data.email || 'No email',
+            createdAt: data.createdAt || null
+          });
+
+          // Calculate new patients
+          if (data.createdAt) {
+            const created = new Date(data.createdAt);
+            if (created > lastWeek) newPatients++;
+            if (created > prevWeek && created <= lastWeek) prevNewPatients++;
+          }
+
+          // Process patient analyses
+          if (Array.isArray(data.previousAnalyses)) {
+            data.previousAnalyses.forEach((analysis, idx) => {
+              if (!analysis || !analysis.predictions) return;
+              
+              const prediction = analysis.predictions[0];
+              if (!prediction) return;
+
+              const severity = prediction.severity;
+              const severityText = severity === 3 ? 'Severe' : 
+                                 severity === 2 ? 'Moderate' : 'Mild';
+
+              // Count reviews by severity
+              if (severity === 3) {
+                severeReviews++;
+                criticalCases++;
+              } else if (severity === 2) {
+                moderateReviews++;
+              }
+              
+              pendingReviews++;
+
+              // Add to analyses array
+              analyses.push({
+                id: `${docSnap.id}_${idx}`,
+                patient: data.fullName || data.email?.split('@')[0] || 'Unknown Patient',
+                condition: prediction.disease || 'Unknown Condition',
+                severity: severityText,
+                time: analysis.timestamp ? 
+                      new Date(analysis.timestamp).toLocaleString() : 
+                      'Unknown Time',
+                status: analysis.status || 'Needs Review',
+                patientId: docSnap.id
+              });
+            });
+          }
+        }
+      }
+
+      // Sort analyses by timestamp (newest first)
+      analyses.sort((a, b) => {
+        const timeA = a.time !== 'Unknown Time' ? new Date(a.time) : new Date(0);
+        const timeB = b.time !== 'Unknown Time' ? new Date(b.time) : new Date(0);
+        return timeB - timeA;
+      });
+
+      setRecentAnalyses(analyses);
+      setUniquePatients(patients);
+      setStatsData({
+        totalPatients,
+        newPatients,
+        prevNewPatients,
+        pendingReviews,
+        moderateReviews,
+        severeReviews,
+        criticalCases
+      });
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please try again.');
+      
+      // Set default empty state
+      setRecentAnalyses([]);
+      setUniquePatients([]);
+      setStatsData({
+        totalPatients: 0,
+        newPatients: 0,
+        prevNewPatients: 0,
+        pendingReviews: 0,
+        moderateReviews: 0,
+        severeReviews: 0,
+        criticalCases: 0
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUser, getUserType]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Initialize state
   const [statsData, setStatsData] = useState({
     totalPatients: 0,
     newPatients: 0,
@@ -32,124 +246,6 @@ const DoctorDashboard = () => {
     severeReviews: 0,
     criticalCases: 0
   });
-
-  useEffect(() => {
-    let unsubscribe;
-    setIsLoading(true);
-    (async () => {
-      const { db } = await import('../firebase');
-      const { collection, onSnapshot, getDocs } = await import('firebase/firestore');
-      const usersRef = collection(db, 'users');
-      unsubscribe = onSnapshot(usersRef, async (usersSnap) => {
-        const now = new Date();
-        const lastWeek = new Date(now.getTime() - 7*24*60*60*1000);
-        const prevWeek = new Date(now.getTime() - 14*24*60*60*1000);
-        let totalPatients = 0;
-        let newPatients = 0;
-        let prevNewPatients = 0;
-        let pendingReviews = 0;
-        let moderateReviews = 0;
-        let severeReviews = 0;
-        let criticalCases = 0;
-        
-        for (const docSnap of usersSnap.docs) {
-          const data = docSnap.data();
-          if (data.userType !== 'doctor') {
-            totalPatients++;
-            const created = new Date(data.createdAt);
-            if (created > lastWeek) newPatients++;
-            if (created > prevWeek && created <= lastWeek) prevNewPatients++;
-            // Fetch count from 'review' subcollection
-            const reviewCol = collection(docSnap.ref, 'review');
-            const reviewSnap = await getDocs(reviewCol);
-            pendingReviews += reviewSnap.size;
-            reviewSnap.forEach(reviewDoc => {
-              const severity = reviewDoc.data().predictions?.[0]?.severity;
-              if (severity === 3) severeReviews++;
-              if (severity === 2) moderateReviews++;
-            });
-            // Count critical cases as before
-            if (Array.isArray(data.previousAnalyses)) {
-              data.previousAnalyses.forEach(analysis => {
-                const severity = analysis.predictions?.[0]?.severity;
-                if (severity === 3) {
-                  criticalCases++;
-                }
-              });
-            }
-          }
-        }
-        setStatsData({ totalPatients, newPatients, prevNewPatients, pendingReviews, moderateReviews, severeReviews, criticalCases });
-        setIsLoading(false);
-      });
-    })();
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, []);
-  
-  const [recentAnalyses, setRecentAnalyses] = useState([]);
-
-  useEffect(() => {
-    async function fetchRecentAnalyses() {
-      try {
-        const { db } = await import('../firebase');
-        const { collection, getDocs } = await import('firebase/firestore');
-        const usersSnap = await getDocs(collection(db, 'users'));
-        let analyses = [];
-        usersSnap.forEach(doc => {
-          const data = doc.data();
-          if (data.userType !== 'doctor' && Array.isArray(data.previousAnalyses)) {
-            data.previousAnalyses.slice(-2).forEach((analysis, idx) => {
-              analyses.push({
-                id: `${doc.id}_${idx}`,
-                patient: data.fullName || data.email || 'Unknown',
-                condition: analysis.predictions?.[0]?.disease || 'Unknown',
-                severity: analysis.predictions?.[0]?.severity === 3 ? 'Severe' : analysis.predictions?.[0]?.severity === 2 ? 'Moderate' : 'Mild',
-                time: analysis.timestamp ? new Date(analysis.timestamp).toLocaleString() : 'Unknown',
-                status: analysis.status || 'Needs Review'
-              });
-            });
-          }
-        });
-        // Sort by time descending
-        analyses.sort((a, b) => new Date(b.time) - new Date(a.time));
-        setRecentAnalyses(analyses.slice(0, 10));
-      } catch (err) {
-        setRecentAnalyses([]);
-      }
-    }
-    fetchRecentAnalyses();
-  }, []);
-  
-  const [uniquePatients, setUniquePatients] = useState([]);
-
-  useEffect(() => {
-    async function fetchUniquePatients() {
-      try {
-        const { db } = await import('../firebase');
-        const { collection, getDocs } = await import('firebase/firestore');
-        const usersSnap = await getDocs(collection(db, 'users'));
-        let patients = [];
-        usersSnap.forEach(doc => {
-          const data = doc.data();
-          if (data.userType !== 'doctor') {
-            patients.push({
-              id: doc.id,
-              name: data.fullName || data.email || 'Unknown',
-              email: data.email,
-              createdAt: data.createdAt,
-              lastAnalysis: Array.isArray(data.previousAnalyses) && data.previousAnalyses.length > 0 ? data.previousAnalyses[data.previousAnalyses.length-1] : null
-            });
-          }
-        });
-        setUniquePatients(patients.slice(0, 5));
-      } catch (err) {
-        setUniquePatients([]);
-      }
-    }
-    fetchUniquePatients();
-  }, []);
 
   // Loading animation
   if (isLoading) {
@@ -163,6 +259,44 @@ const DoctorDashboard = () => {
     );
   }
 
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center max-w-md mx-auto text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 14.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => {
+              setError(null);
+              fetchDashboardData();
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Auth check
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h2>
+          <p className="text-gray-600">Please log in to access the doctor dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
       {/* Header */}
@@ -171,8 +305,9 @@ const DoctorDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold text-blue-800">Doctor Dashboard</h1>
             <p className="text-gray-600 mt-2">
-              Welcome, Dr. {currentUser?.displayName || currentUser?.email || 'User'}!
-              <br />Here's an overview personalized for you.
+              {getPersonalizedDoctorGreeting()}!
+              <br />
+              <span className="text-blue-600 font-medium">{getDoctorActivityMessage()}</span>
             </p>
           </div>
           <Bounce triggerOnce>
@@ -318,61 +453,73 @@ const DoctorDashboard = () => {
           </Slide>
           
           <div className="divide-y divide-gray-100">
-            {recentAnalyses
-              .filter(a => (filterSeverity === 'all' ? true : a.severity === filterSeverity))
-              .filter(a => (filterStatus === 'all' ? true : a.status === filterStatus))
-              .sort((a, b) => {
-                if (sortOption === 'time') {
-                  return new Date(b.time) - new Date(a.time);
-                } else if (sortOption === 'severity') {
-                  const sevOrder = { 'Severe': 3, 'Moderate': 2, 'Mild': 1 };
-                  return sevOrder[b.severity] - sevOrder[a.severity];
-                } else if (sortOption === 'patient') {
-                  return a.patient.localeCompare(b.patient);
-                }
-                return 0;
-              })
-              .slice(0, 4)
-              .map((analysis, index) => (
-              <Fade key={analysis.id} delay={index * 100} triggerOnce>
-                <div className="p-4 hover:bg-blue-50 transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-900">{analysis.patient}</h3>
-                      <p className="text-sm text-gray-600">{analysis.condition}</p>
+            {recentAnalyses && recentAnalyses.length > 0 ? (
+              recentAnalyses
+                .filter(a => (filterSeverity === 'all' ? true : a.severity === filterSeverity))
+                .filter(a => (filterStatus === 'all' ? true : a.status === filterStatus))
+                .sort((a, b) => {
+                  if (sortOption === 'time') {
+                    const timeA = a.time !== 'Unknown Time' ? new Date(a.time) : new Date(0);
+                    const timeB = b.time !== 'Unknown Time' ? new Date(b.time) : new Date(0);
+                    return timeB - timeA;
+                  } else if (sortOption === 'severity') {
+                    const sevOrder = { 'Severe': 3, 'Moderate': 2, 'Mild': 1 };
+                    return (sevOrder[b.severity] || 0) - (sevOrder[a.severity] || 0);
+                  } else if (sortOption === 'patient') {
+                    return (a.patient || '').localeCompare(b.patient || '');
+                  }
+                  return 0;
+                })
+                .slice(0, 4)
+                .map((analysis, index) => (
+                <Fade key={analysis.id} delay={index * 100} triggerOnce>
+                  <div className="p-4 hover:bg-blue-50 transition-all duration-300 transform hover:-translate-y-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{analysis.patient || 'Unknown Patient'}</h3>
+                        <p className="text-sm text-gray-600">{analysis.condition || 'Unknown Condition'}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          analysis.severity === 'Mild' ? 'bg-green-100 text-green-800' :
+                          analysis.severity === 'Moderate' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {analysis.severity || 'Unknown'}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          analysis.status === 'Reviewed' ? 'bg-blue-100 text-blue-800' :
+                          analysis.status === 'Needs Follow-up' ? 'bg-purple-100 text-purple-800' :
+                          'bg-orange-100 text-orange-800'
+                        }`}>
+                          {analysis.status || 'Needs Review'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        analysis.severity === 'Mild' ? 'bg-green-100 text-green-800' :
-                        analysis.severity === 'Moderate' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {analysis.severity}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        analysis.status === 'Reviewed' ? 'bg-blue-100 text-blue-800' :
-                        analysis.status === 'Needs Follow-up' ? 'bg-purple-100 text-purple-800' :
-                        'bg-orange-100 text-orange-800'
-                      }`}>
-                        {analysis.status}
-                      </span>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs text-gray-500">{analysis.time || 'Unknown Time'}</span>
+                      <button className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1" onClick={() => {
+                        const patientId = analysis.patientId || analysis.id.split('_')[0];
+                        navigateToPatientDashboard(patientId);
+                      }}>
+                        View Details →
+                      </button>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs text-gray-500">{analysis.time}</span>
-                    <button className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1" onClick={() => {
-                      const patientId = analysis.id.split('_')[0];
-                      window.location.href = `/patient-dashboard/${patientId}`;
-                    }}>
-                      View Details →
-                    </button>
-                  </div>
-                </div>
-              </Fade>
-            ))}
+                </Fade>
+              ))
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-sm">No patient analyses found</p>
+                <p className="text-xs text-gray-400 mt-1">Patient data will appear here when available</p>
+              </div>
+            )}
           </div>
           <div className="p-4 bg-gray-50 text-center">
-            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1" onClick={() => window.location.href = '/all-patient-records'}>
+            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1" onClick={navigateToAllPatientRecords}>
               View All Patient Records →
             </button>
           </div>
@@ -387,16 +534,21 @@ const DoctorDashboard = () => {
                 <h2 className="font-semibold">Today's Patients</h2>
               </div>
               <div className="divide-y divide-gray-100">
-                {uniquePatients.length === 0 ? (
-                  <div className="p-4 text-gray-500">No patients found.</div>
+                {uniquePatients && uniquePatients.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <svg className="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                    <p className="text-sm">No patients found</p>
+                  </div>
                 ) : (
                     uniquePatients.slice(0, 4).map((patient, index) => (
-                    <Zoom key={patient.id} delay={index * 100} triggerOnce>
+                    <Zoom key={patient.id || index} delay={index * 100} triggerOnce>
                       <div className="p-4 hover:bg-blue-50 transition-colors">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-medium text-gray-900">{patient.name}</h3>
-                            <p className="text-sm text-gray-600">{patient.email}</p>
+                            <h3 className="font-medium text-gray-900">{patient.name || 'Unknown Patient'}</h3>
+                            <p className="text-sm text-gray-600">{patient.email || 'No email'}</p>
                             <p className="text-xs text-gray-500">Joined: {patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'Unknown'}</p>
                           </div>
                         </div>
@@ -415,8 +567,14 @@ const DoctorDashboard = () => {
                 <h2 className="font-semibold">Critical Cases</h2>
               </div>
               <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
-                {recentAnalyses.filter(analysis => analysis.severity === 'Severe').length === 0 ? (
-                  <div className="p-4 text-gray-500">No critical cases found.</div>
+                {recentAnalyses && recentAnalyses.filter(analysis => analysis.severity === 'Severe').length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <svg className="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm">No critical cases</p>
+                    <p className="text-xs text-gray-400 mt-1">All patients stable</p>
+                  </div>
                 ) : (
                   recentAnalyses
                     .filter(analysis => analysis.severity === 'Severe')
@@ -426,8 +584,8 @@ const DoctorDashboard = () => {
                         <div className="p-4 hover:bg-red-50 transition-all duration-300">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-medium text-gray-900">{analysis.patient}</h3>
-                              <p className="text-sm text-gray-600">{analysis.condition}</p>
+                              <h3 className="font-medium text-gray-900">{analysis.patient || 'Unknown Patient'}</h3>
+                              <p className="text-sm text-gray-600">{analysis.condition || 'Unknown Condition'}</p>
                               <p className="text-xs text-red-600 font-medium">Severe Condition</p>
                             </div>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -435,16 +593,16 @@ const DoctorDashboard = () => {
                               analysis.status === 'Needs Follow-up' ? 'bg-purple-100 text-purple-800' :
                               'bg-orange-100 text-orange-800'
                             }`}>
-                              {analysis.status}
+                              {analysis.status || 'Needs Review'}
                             </span>
                           </div>
                           <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs text-gray-500">{analysis.time}</span>
+                            <span className="text-xs text-gray-500">{analysis.time || 'Unknown Time'}</span>
                             <button 
                               className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1" 
                               onClick={() => {
-                                const patientId = analysis.id.split('_')[0];
-                                window.location.href = `/patient-dashboard/${patientId}`;
+                                const patientId = analysis.patientId || analysis.id.split('_')[0];
+                                navigateToPatientDashboard(patientId);
                               }}
                             >
                               View Details →
@@ -455,7 +613,7 @@ const DoctorDashboard = () => {
                     ))
                 )}
               </div>
-              {recentAnalyses.filter(analysis => analysis.severity === 'Severe').length > 5 && (
+              {recentAnalyses && recentAnalyses.filter(analysis => analysis.severity === 'Severe').length > 4 && (
                 <div className="p-4 bg-gray-50 text-center">
                   <button className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1">
                     View All Critical Cases →

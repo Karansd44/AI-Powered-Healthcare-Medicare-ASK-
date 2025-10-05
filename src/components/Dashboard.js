@@ -42,6 +42,37 @@ export default function Dashboard() {
   const [analysisSort, setAnalysisSort] = useState('date');
   const [activeTab, setActiveTab] = useState('overview');
 
+  // Get personalized dashboard greeting
+  const getPersonalizedGreeting = (userName) => {
+    const hour = new Date().getHours();
+    let timeGreeting = "";
+    if (hour < 12) timeGreeting = "Good morning";
+    else if (hour < 17) timeGreeting = "Good afternoon";
+    else timeGreeting = "Good evening";
+    
+    return `${timeGreeting}, ${userName}`;
+  };
+
+  // Get personalized health status message
+  const getHealthStatusMessage = (analyses) => {
+    if (!analyses || analyses.length === 0) {
+      return "Ready to start your health journey? Let's analyze your first symptoms!";
+    }
+    
+    const recentAnalysis = analyses[0];
+    const daysSinceLastAnalysis = Math.floor((Date.now() - new Date(recentAnalysis.timestamp).getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysSinceLastAnalysis === 0) {
+      return "You've been active today! Keep monitoring your health.";
+    } else if (daysSinceLastAnalysis === 1) {
+      return "It's been a day since your last check-in. How are you feeling?";
+    } else if (daysSinceLastAnalysis <= 7) {
+      return `It's been ${daysSinceLastAnalysis} days since your last analysis. Time for a health check?`;
+    } else {
+      return "Welcome back! It's been a while. Let's catch up on your health.";
+    }
+  };
+
   useEffect(() => {
     async function fetchDashboardData() {
       if (!currentUser) {
@@ -387,7 +418,8 @@ export default function Dashboard() {
                 <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Health Dashboard
                 </h1>
-                <p className="text-gray-600">Welcome back, {userData.name}</p>
+                <p className="text-gray-600">{getPersonalizedGreeting(userData.name)}</p>
+                <p className="text-sm text-blue-600 mt-1">{getHealthStatusMessage(previousAnalyses)}</p>
               </div>
             </div>
             

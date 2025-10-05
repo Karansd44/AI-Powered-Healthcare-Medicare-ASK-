@@ -7,6 +7,7 @@ import SymptomInput from './components/SymptomInput';
 import ResultsDisplay from './components/ResultsDisplay';
 import ProfileView from './components/ProfileView';
 import HealthHistory from './components/HealthHistory';
+import Settings from './components/Settings';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import ForgotPassword from './components/auth/ForgotPassword';
@@ -63,6 +64,13 @@ const PhoneIcon = ({ className }) => (
 const LogoutIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+  </svg>
+);
+
+const SettingsIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 );
 
@@ -197,7 +205,7 @@ function MediMindAppContent() {
           }
         }
       };
-      const apiKey = "AIzaSyBZTb8qLiyzj5_XUN9JqXGh-7-l_u1Kq1g"
+      const apiKey = process.env.REACT_APP_GEMINI_API_KEY_ALT
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -280,7 +288,39 @@ function MediMindAppContent() {
   };
 
   // Navigation component
-  const Navigation = () => (
+  const Navigation = () => {
+    const { currentUser, getUserType } = useAuth();
+    const userType = getUserType();
+    
+    const getDashboardLabel = () => {
+      if (userType === 'doctor') {
+        return 'Doctor Dashboard';
+      } else if (userType === 'patient') {
+        return 'Patient Dashboard';
+      }
+      return 'Dashboard'; // fallback
+    };
+
+    const getDashboardIcon = () => {
+      if (userType === 'doctor') {
+        // Medical cross icon for doctors
+        return (
+          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        );
+      } else if (userType === 'patient') {
+        // User icon for patients
+        return (
+          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        );
+      }
+      return <GridIcon className="h-4 w-4 mr-1" />; // fallback
+    };
+
+    return (
     <nav className="bg-white/60 backdrop-blur-md border-b border-gray-200/50 shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
@@ -362,8 +402,8 @@ function MediMindAppContent() {
                     }`
                   }
                 >
-                  <GridIcon className="h-4 w-4 mr-1" />
-                  Dashboard
+                  {getDashboardIcon()}
+                  {getDashboardLabel()}
                 </NavLink>
                 
                 <div className="flex items-center ml-4 pl-4 border-l border-gray-200 relative">
@@ -408,6 +448,16 @@ function MediMindAppContent() {
                         >
                           <UserIcon className="h-5 w-5" />
                           Profile View
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowProfileDropdown(false);
+                            navigate('/settings');
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 font-medium transition-colors duration-150"
+                        >
+                          <SettingsIcon className="h-5 w-5" />
+                          Settings
                         </button>
                         <div className="my-1 border-t border-gray-100" />
                         <button
@@ -456,7 +506,8 @@ function MediMindAppContent() {
         </div>
       </div>
     </nav>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
@@ -473,6 +524,7 @@ function MediMindAppContent() {
             <Route path="/register" element={<Register key="register" />} />
             <Route path="/forgot-password" element={<ForgotPassword key="forgot-password" />} />
             <Route path="/profile" element={<ProfileView />} />
+            <Route path="/settings" element={<Settings />} />
             <Route 
               path="/input" 
               element={

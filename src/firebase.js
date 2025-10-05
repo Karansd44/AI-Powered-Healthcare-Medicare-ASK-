@@ -4,12 +4,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDSqw1cVaCPH2MwQTUeFsAg4Uu9JWeiM7A", // Find this in Project settings -> General -> Web API Key
-  authDomain: "medicare-6f98b.firebaseapp.com", // This is usually your projectId.firebaseapp.com
-  projectId: "medicare-6f98b", // This is your Project ID!
-  storageBucket: "medicare-6f98b.appspot.com", // Usually your projectId.appspot.com
-  messagingSenderId: "393454182543", // This is your Project Number!
-  appId: "1:393454182543:web:abcdef123456" // Find this in Project settings -> Your apps -> Web app
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);

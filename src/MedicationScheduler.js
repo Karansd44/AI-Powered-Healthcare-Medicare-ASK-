@@ -27,7 +27,7 @@ const MedicationScheduler = ({ disease, onClose }) => {
             responseMimeType: 'application/json'
           }
         };
-        const apiKey = 'AIzaSyBZTb8qLiyzj5_XUN9JqXGh-7-l_u1Kq1g';
+        const apiKey = process.env.REACT_APP_GEMINI_API_KEY_ALT;
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -80,7 +80,7 @@ const MedicationScheduler = ({ disease, onClose }) => {
       let chatHistory = [];
       chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
       const payload = { contents: chatHistory, generationConfig: { responseMimeType: 'application/json' } };
-      const apiKey = 'AIzaSyBZTb8qLiyzj5_XUN9JqXGh-7-l_u1Kq1g';
+      const apiKey = process.env.REACT_APP_GEMINI_API_KEY_ALT;
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
       const response = await fetch(apiUrl, {
         method: 'POST',

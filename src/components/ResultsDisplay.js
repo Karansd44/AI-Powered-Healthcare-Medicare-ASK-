@@ -19,6 +19,9 @@ const ResultsDisplay = ({
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showManualLocation, setShowManualLocation] = useState(false);
+  const [manualLocation, setManualLocation] = useState('');
+  const [isSearchingManual, setIsSearchingManual] = useState(false);
   const { currentUser, getUserType } = useAuth();
   const [userType, setUserType] = useState(null);
 
@@ -86,13 +89,13 @@ const ResultsDisplay = ({
     try {
       // Check if geolocation is supported
       if (!navigator.geolocation) {
-        throw new Error('Geolocation is not supported by your browser');
+        throw new Error('Geolocation is not supported by your browser. Please use a modern browser that supports location services.');
       }
 
       // Request location permission with a timeout
       const position = await new Promise((resolve, reject) => {
         const locationTimeout = setTimeout(() => {
-          reject(new Error('Location request timed out. Please try again.'));
+          reject(new Error('Location request timed out after 10 seconds. Please try again.'));
         }, 10000);
 
         navigator.geolocation.getCurrentPosition(
@@ -104,16 +107,38 @@ const ResultsDisplay = ({
             clearTimeout(locationTimeout);
             switch (err.code) {
               case 1:
-                reject(new Error('Location access was denied. Please enable location access in your browser settings and try again.'));
+                reject(new Error(
+                  'Location access was denied. To find nearby hospitals:\n\n' +
+                  '1. Click the location icon (🔒) in your browser\'s address bar\n' +
+                  '2. Select "Allow" for location access\n' +
+                  '3. Refresh the page and try again\n\n' +
+                  'Or manually enter your city/area in the search below.'
+                ));
                 break;
               case 2:
-                reject(new Error('Location is currently unavailable. Please try again.'));
+                reject(new Error(
+                  'Your location is currently unavailable. This might be due to:\n' +
+                  '• Weak GPS signal\n' +
+                  '• Location services disabled\n' +
+                  '• Network connectivity issues\n\n' +
+                  'Please check your device settings and try again.'
+                ));
                 break;
               case 3:
-                reject(new Error('Location request timed out. Please try again.'));
+                reject(new Error(
+                  'Location request timed out. This might be due to:\n' +
+                  '• Slow network connection\n' +
+                  '• GPS signal issues\n\n' +
+                  'Please try again or use manual location entry.'
+                ));
                 break;
               default:
-                reject(new Error('Unable to get your location. Please try again.'));
+                reject(new Error(
+                  'Unable to get your location. Please:\n' +
+                  '• Check if location services are enabled\n' +
+                  '• Allow location access for this website\n' +
+                  '• Try refreshing the page'
+                ));
             }
           },
           {
@@ -202,10 +227,110 @@ const ResultsDisplay = ({
       return [{
         name: 'Location Access Required',
         clinic: error.message || 'Please enable location access to see nearby hospitals',
-        address: 'Check your browser settings and try again',
+        address: 'Try manual location search below',
         image: "https://placehold.co/100x100/E2E8F0/4A5568?text=⚠️",
         rating: 0
       }];
+    }
+  };
+
+  // Function to search hospitals by manual location input
+  const searchHospitalsByLocation = async (locationQuery, specialist) => {
+    try {
+      setIsSearchingManual(true);
+      
+      // First, geocode the location query to get coordinates
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(locationQuery)}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
+      
+      const geocodeResponse = await fetch(`http://localhost:3005/api/geocode?address=${encodeURIComponent(locationQuery)}`);
+      
+      if (!geocodeResponse.ok) {
+        throw new Error('Unable to find the specified location. Please try a different location.');
+      }
+      
+      const geocodeData = await geocodeResponse.json();
+      
+      if (!geocodeData.results || geocodeData.results.length === 0) {
+        throw new Error('Location not found. Please try with a more specific address or city name.');
+      }
+      
+      const location = geocodeData.results[0].geometry.location;
+      const { lat, lng } = location;
+      
+      // Now search for hospitals near those coordinates
+      const searchQuery = specialist ? `${specialist} hospitals` : 'hospitals';
+      const apiUrl = 'http://localhost:3005/api/places/nearbysearch';
+      const params = new URLSearchParams({
+        location: `${lat},${lng}`,
+        radius: '10000', // 10km radius for manual search
+        type: 'hospital',
+        keyword: searchQuery || ''
+      });
+
+      const response = await fetch(`${apiUrl}?${params}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch hospitals: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.results || data.results.length === 0) {
+        return [{
+          name: 'No Hospitals Found',
+          clinic: `No hospitals found near ${locationQuery}`,
+          address: 'Try expanding search area or different location',
+          image: "https://placehold.co/100x100/E2E8F0/4A5568?text=NH",
+          rating: 0
+        }];
+      }
+
+      // Format results similar to the geolocation search
+      const formattedResults = data.results.map(place => ({
+        name: place.name,
+        clinic: place.name,
+        address: place.vicinity,
+        image: place.photos?.[0]?.photo_reference
+          ? `http://localhost:3005/api/places/photo?photoreference=${place.photos[0].photo_reference}&maxwidth=400`
+          : "https://placehold.co/400x300/E2E8F0/4A5568?text=Hospital",
+        rating: place.rating || 0,
+        placeId: place.place_id,
+        location: place.geometry.location,
+        openNow: place.opening_hours?.open_now,
+        userRatingsTotal: place.user_ratings_total || 0
+      }));
+
+      return formattedResults
+        .sort((a, b) => {
+          if (b.rating === a.rating) {
+            return b.userRatingsTotal - a.userRatingsTotal;
+          }
+          return b.rating - a.rating;
+        })
+        .slice(0, 6); // Show more results for manual search
+        
+    } catch (error) {
+      console.error('Error searching hospitals by location:', error);
+      return [{
+        name: 'Search Error',
+        clinic: error.message || 'Unable to search hospitals in this location',
+        address: 'Please try a different location or check your spelling',
+        image: "https://placehold.co/100x100/E2E8F0/4A5568?text=❌",
+        rating: 0
+      }];
+    } finally {
+      setIsSearchingManual(false);
     }
   };
 
@@ -249,6 +374,28 @@ const ResultsDisplay = ({
       }]);
     } finally {
       setIsLoadingDoctors(false);
+    }
+  };
+
+  const handleManualLocationSearch = async () => {
+    if (!manualLocation.trim() || !selectedDisease) return;
+
+    try {
+      setIsSearchingManual(true);
+      const results = await searchHospitalsByLocation(manualLocation.trim(), selectedDisease.specialist);
+      setDoctorResults(results);
+      setShowManualLocation(false);
+    } catch (error) {
+      console.error('Error in manual location search:', error);
+      setDoctorResults([{
+        name: 'Search Error',
+        clinic: error.message || 'Unable to search hospitals in this location',
+        address: 'Please try a different location',
+        image: "https://placehold.co/100x100/E2E8F0/4A5568?text=❌",
+        rating: 0
+      }]);
+    } finally {
+      setIsSearchingManual(false);
     }
   };
 
@@ -476,6 +623,33 @@ const ResultsDisplay = ({
                           <Button onClick={handleFindDoctors} disabled={isLoadingDoctors} className="w-full mt-2 bg-indigo-500 hover:bg-indigo-600">
                             {isLoadingDoctors ? 'Searching...' : 'Find Doctors Nearby'}
                           </Button>
+                          
+                          {/* Manual Location Search Option */}
+                          <div className="mt-3 border-t pt-3">
+                            <p className="text-sm text-gray-600 mb-2">Can't access your location? Search manually:</p>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Enter city, address, or area"
+                                value={manualLocation}
+                                onChange={(e) => setManualLocation(e.target.value)}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter' && manualLocation.trim()) {
+                                    handleManualLocationSearch();
+                                  }
+                                }}
+                              />
+                              <Button 
+                                onClick={handleManualLocationSearch} 
+                                disabled={!manualLocation.trim() || isSearchingManual}
+                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-sm"
+                              >
+                                {isSearchingManual ? 'Searching...' : 'Search'}
+                              </Button>
+                            </div>
+                          </div>
+                          
                           {selectedDisease.severity === 3 && (
                             <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold flex items-center justify-center gap-2" onClick={() => window.open('tel:112')}>
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -560,7 +734,7 @@ const ResultsDisplay = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {doctorResults.map((hospital, i) => {
                     const mapImg = hospital.location
-                      ? `https://maps.googleapis.com/maps/api/staticmap?center=${hospital.location.lat},${hospital.location.lng}&zoom=16&size=400x200&maptype=roadmap&markers=color:red%7C${hospital.location.lat},${hospital.location.lng}&key=AIzaSyBk40Z9cVPiwH6oHU-nawkB_CpjIQmSSBU`
+                      ? `https://maps.googleapis.com/maps/api/staticmap?center=${hospital.location.lat},${hospital.location.lng}&zoom=16&size=400x200&maptype=roadmap&markers=color:red%7C${hospital.location.lat},${hospital.location.lng}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
                       : hospital.image;
                     return (
                       <motion.div

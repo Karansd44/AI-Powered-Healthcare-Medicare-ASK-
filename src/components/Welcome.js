@@ -3,11 +3,46 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HeartbeatIcon } from './Icons';
 import { Button } from './UIComponents';
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../contexts/AuthContext';
 
 const Welcome = ({ onStart }) => {
   const navigate = useNavigate();
+  const { currentUser, getUserType } = useAuth();
   const [currentFeature, setCurrentFeature] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  
+  const userType = currentUser ? getUserType() : null;
+  const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
+
+  // Get personalized greeting based on time and user type
+  const getPersonalizedGreeting = () => {
+    const hour = new Date().getHours();
+    let timeGreeting = '';
+    
+    if (hour < 12) timeGreeting = 'Good morning';
+    else if (hour < 17) timeGreeting = 'Good afternoon';
+    else timeGreeting = 'Good evening';
+
+    if (!currentUser) {
+      return `${timeGreeting}! Welcome to AI Health Assistant`;
+    }
+
+    const roleGreeting = userType === 'doctor' ? 'Dr.' : '';
+    return `${timeGreeting}, ${roleGreeting} ${userName}!`;
+  };
+
+  // Get personalized subtitle based on user type
+  const getPersonalizedSubtitle = () => {
+    if (!currentUser) {
+      return "Describe your symptoms in plain language, and our advanced AI will provide comprehensive health insights and recommendations.";
+    }
+
+    if (userType === 'doctor') {
+      return "Access your patient dashboard, review cases, and utilize AI-powered diagnostic tools to enhance your practice.";
+    } else {
+      return `Welcome back! Your personalized health dashboard is ready with AI-powered insights tailored just for you.`;
+    }
+  };
 
   // Auto-rotate features
   useEffect(() => {
@@ -161,7 +196,7 @@ const Welcome = ({ onStart }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            AI Health <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Assistant</span>
+            {getPersonalizedGreeting()}
           </motion.h1>
           
           <motion.p 
@@ -170,7 +205,7 @@ const Welcome = ({ onStart }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Describe your symptoms in plain language, and our advanced AI will provide comprehensive health insights and recommendations.
+            {getPersonalizedSubtitle()}
           </motion.p>
         </motion.div>
 

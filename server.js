@@ -140,6 +140,56 @@ app.get('/api/places/nearbysearch', async (req, res) => {
   }
 });
 
+// Geocoding endpoint for manual location search
+app.get('/api/geocode', async (req, res) => {
+  try {
+    const { address } = req.query;
+
+    if (!address) {
+      return res.status(400).json({ 
+        error: 'Address parameter is required',
+        results: []
+      });
+    }
+
+    if (!process.env.GOOGLE_MAPS_API_KEY) {
+      console.error('Google Maps API key is missing');
+      return res.status(500).json({
+        error: 'Server configuration error: API key is missing',
+        results: []
+      });
+    }
+
+    const response = await client.geocode({
+      params: {
+        address,
+        key: process.env.GOOGLE_MAPS_API_KEY,
+      },
+    });
+
+    console.log('Geocoding API response status:', response.data.status);
+
+    if (response.data && response.data.status === 'OK') {
+      res.json({
+        results: response.data.results || [],
+        status: 'OK'
+      });
+    } else {
+      res.json({
+        results: [],
+        status: response.data.status,
+        error: 'Location not found'
+      });
+    }
+  } catch (error) {
+    console.error('Error geocoding address:', error);
+    res.status(500).json({ 
+      error: `Error geocoding address: ${error.message}`,
+      results: []
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
