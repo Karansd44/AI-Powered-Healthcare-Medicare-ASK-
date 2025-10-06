@@ -250,10 +250,98 @@ const DoctorDashboard = () => {
   // Loading animation
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading your dashboard...</p>
+      <div className="min-h-screen bg-gray-50 p-6">
+        {/* Header skeleton */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-64 mb-2 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
+          </div>
+          <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse"></div>
+        </div>
+
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[1, 2, 3, 4].map((item) => (
+            <div key={item} className="bg-white rounded-xl shadow-sm p-6">
+              <div className="h-5 bg-gray-200 rounded w-20 mb-2 animate-pulse"></div>
+              <div className="h-8 bg-gray-200 rounded w-16 mb-4 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main content skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex flex-wrap gap-4 mb-4">
+                {[1, 2, 3].map((item) => (
+                  <div key={item} className="flex flex-col items-start">
+                    <div className="h-4 bg-gray-200 rounded w-24 mb-2 animate-pulse"></div>
+                    <div className="h-10 bg-gray-200 rounded w-40 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+              <div className="h-6 bg-gray-200 rounded w-64 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-80 animate-pulse"></div>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {[1, 2, 3, 4].map((item) => (
+                <div key={item} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="h-5 bg-gray-200 rounded w-40 mb-2 animate-pulse"></div>
+                      <div className="h-4 bg-gray-200 rounded w-60 animate-pulse"></div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
+                      <div className="h-6 bg-gray-200 rounded w-20 animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-28 animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right sidebar skeleton */}
+          <div className="space-y-6">
+            {/* Today's Patients skeleton */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="p-4 bg-gray-200 animate-pulse">
+                <div className="h-5 bg-gray-300 rounded w-40"></div>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {[1, 2, 3].map((item) => (
+                  <div key={item} className="p-4">
+                    <div className="h-5 bg-gray-200 rounded w-40 mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-60 mb-1 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Critical Cases skeleton */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="p-4 bg-gray-200 animate-pulse">
+                <div className="h-5 bg-gray-300 rounded w-40"></div>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {[1, 2].map((item) => (
+                  <div key={item} className="p-4">
+                    <div className="h-5 bg-gray-200 rounded w-40 mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-48 mb-1 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
