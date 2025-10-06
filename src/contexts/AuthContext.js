@@ -41,8 +41,13 @@ export function AuthProvider({ children }) {
     return userCredential;
   }
 
-  function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+  async function login(email, password) {
+    try {
+      return await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error("Authentication error:", error.code, error.message);
+      throw error; // Re-throw to handle in the component
+    }
   }
 
   function logout() {

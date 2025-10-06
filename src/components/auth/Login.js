@@ -17,7 +17,16 @@ const Login = () => {
       await signInWithGoogle();
       navigate("/");
     } catch (error) {
-      setError("Google sign-in failed: " + error.message);
+      console.error("Google sign-in error:", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        setError("Google sign-in was canceled. Please try again.");
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        setError("Multiple popup requests detected. Please try again.");
+      } else if (error.code === 'auth/popup-blocked') {
+        setError("Sign-in popup was blocked. Please enable popups for this site and try again.");
+      } else {
+        setError("Google sign-in failed: " + error.message);
+      }
     }
     setLoading(false);
   }
@@ -44,7 +53,18 @@ const Login = () => {
       await login(email, password);
       navigate('/');
     } catch (error) {
-      setError('Failed to sign in: ' + error.message);
+      console.error("Login error:", error);
+      if (error.code === 'auth/invalid-credential') {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else if (error.code === 'auth/user-not-found') {
+        setError('No account found with this email. Please check the email or create a new account.');
+      } else if (error.code === 'auth/wrong-password') {
+        setError('Incorrect password. Please try again or use the forgot password option.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setError('Too many failed login attempts. Please try again later or reset your password.');
+      } else {
+        setError('Failed to sign in: ' + error.message);
+      }
     }
     setLoading(false);
   }
@@ -83,6 +103,7 @@ const Login = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="Enter your email"
             />
+            <p className="mt-1 text-xs text-gray-500">Enter the email address you used to register</p>
           </div>
 
           <div>
@@ -98,6 +119,7 @@ const Login = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="Enter your password"
             />
+            <p className="mt-1 text-xs text-gray-500">Passwords are case-sensitive</p>
           </div>
 
           <div className="flex items-center justify-between">
@@ -127,6 +149,17 @@ const Login = () => {
           >
             Sign in
           </button>
+          
+          {/* Login help section */}
+          <div className="mt-4 bg-blue-50 p-3 rounded-lg text-xs text-gray-600">
+            <p className="font-medium text-blue-700 mb-1">Having trouble logging in?</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Make sure your email is entered correctly</li>
+              <li>Passwords are case-sensitive</li>
+              <li>Check if your Caps Lock is turned on</li>
+              <li>Try resetting your password if you can't remember it</li>
+            </ul>
+          </div>
         </form>
 
         <div className="mt-6">
