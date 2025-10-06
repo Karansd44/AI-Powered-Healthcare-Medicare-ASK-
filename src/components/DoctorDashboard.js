@@ -386,16 +386,16 @@ const DoctorDashboard = () => {
   }
 
   return (
-    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+    <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
       {/* Header */}
       <Fade triggerOnce>
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-blue-800">Doctor Dashboard</h1>
-            <p className="text-gray-600 mt-2">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-4 sm:mb-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-blue-800">Doctor Dashboard</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
               {getPersonalizedDoctorGreeting()}!
-              <br />
-              <span className="text-blue-600 font-medium">{getDoctorActivityMessage()}</span>
+              <br className="hidden sm:block" />
+              <span className="block sm:inline text-blue-600 font-medium">{getDoctorActivityMessage()}</span>
             </p>
           </div>
           <Bounce triggerOnce>
@@ -412,21 +412,21 @@ const DoctorDashboard = () => {
       </Fade>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <Flip triggerOnce>
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 transform transition-all hover:scale-105 hover:shadow-xl">
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border-l-4 border-blue-500 transform transition-all hover:scale-102 hover:shadow-xl">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Total Patients</h3>
-                <p className="text-2xl font-bold text-gray-800">{statsData.totalPatients}</p>
+                <h3 className="text-xs sm:text-sm font-medium text-gray-500">Total Patients</h3>
+                <p className="text-xl sm:text-2xl font-bold text-gray-800">{statsData.totalPatients}</p>
               </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-blue-100 p-2 sm:p-3 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">{statsData.totalPatients - statsData.prevNewPatients > 0 ? `+${statsData.totalPatients - statsData.prevNewPatients} from last week` : 'No change from last week'}</p>
+            <p className="text-xs text-gray-500 mt-1 sm:mt-2">{statsData.totalPatients - statsData.prevNewPatients > 0 ? `+${statsData.totalPatients - statsData.prevNewPatients} from last week` : 'No change from last week'}</p>
           </div>
         </Flip>
 
@@ -483,18 +483,18 @@ const DoctorDashboard = () => {
         </Flip>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Recent Patient Analyses */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="md:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden">
           <Slide triggerOnce>
             <div className="p-6 border-b border-gray-100">
               {/* Sort and Filter Controls */}
-              <div className="flex flex-wrap gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4">
                 <div className="flex flex-col items-start">
                   <label className="mb-1 text-xs font-semibold text-blue-700 tracking-wide">Sort by</label>
-                  <div className="relative w-40">
+                  <div className="relative w-full sm:w-40">
                     <select value={sortOption} onChange={e => setSortOption(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border-2 border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white text-sm font-medium text-blue-800 shadow-sm transition-all appearance-none transform focus:scale-105 focus:shadow-lg focus:outline-none duration-200 ease-in-out focus:bg-white focus:text-blue-800">
+                      className="w-full px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border-2 border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white text-sm font-medium text-blue-800 shadow-sm transition-all appearance-none focus:outline-none">
                       <option value="time">Time (Newest)</option>
                       <option value="severity">Severity</option>
                       <option value="patient">Patient Name</option>
@@ -506,37 +506,37 @@ const DoctorDashboard = () => {
                 </div>
                 <div className="flex flex-col items-start">
                   <label className="mb-1 text-xs font-semibold text-yellow-700 tracking-wide">Filter by Severity</label>
-                  <div className="relative w-40">
+                  <div className="relative w-full sm:w-40">
                     <select value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border-2 border-yellow-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 bg-white text-sm font-medium text-yellow-800 shadow-sm transition-all appearance-none transform focus:scale-105 focus:shadow-lg focus:outline-none duration-200 ease-in-out focus:bg-white focus:text-yellow-800">
+                      className="w-full px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border-2 border-yellow-200 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 bg-white text-sm font-medium text-yellow-800 shadow-sm transition-all appearance-none focus:outline-none">
                       <option value="all">All</option>
                       <option value="Severe">Severe</option>
                       <option value="Moderate">Moderate</option>
                       <option value="Mild">Mild</option>
                     </select>
-                    <span className="absolute right-3 top-3 pointer-events-none text-yellow-400">
+                    <span className="absolute right-3 top-2 pointer-events-none text-yellow-400">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                     </span>
                   </div>
                 </div>
                 <div className="flex flex-col items-start">
                   <label className="mb-1 text-xs font-semibold text-purple-700 tracking-wide">Filter by Status</label>
-                  <div className="relative w-40">
+                  <div className="relative w-full sm:w-40">
                     <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border-2 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 bg-white text-sm font-medium text-purple-800 shadow-sm transition-all appearance-none transform focus:scale-105 focus:shadow-lg focus:outline-none duration-200 ease-in-out focus:bg-white focus:text-purple-800">
+                      className="w-full px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border-2 border-purple-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 bg-white text-sm font-medium text-purple-800 shadow-sm transition-all appearance-none focus:outline-none">
                       <option value="all">All</option>
                       <option value="Reviewed">Reviewed</option>
                       <option value="Needs Review">Needs Review</option>
                       <option value="Needs Follow-up">Needs Follow-up</option>
                     </select>
-                    <span className="absolute right-3 top-3 pointer-events-none text-purple-400">
+                    <span className="absolute right-3 top-2 pointer-events-none text-purple-400">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                     </span>
                   </div>
                 </div>
               </div>
-              <h2 className="text-xl font-semibold text-gray-800">Recent Patient Analyses</h2>
-              <p className="text-sm text-gray-600">Latest symptom analyses requiring your review</p>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Recent Patient Analyses</h2>
+              <p className="text-xs sm:text-sm text-gray-600">Latest symptom analyses requiring your review</p>
             </div>
           </Slide>
           
@@ -561,21 +561,21 @@ const DoctorDashboard = () => {
                 .slice(0, 4)
                 .map((analysis, index) => (
                 <Fade key={analysis.id} delay={index * 100} triggerOnce>
-                  <div className="p-4 hover:bg-blue-50 transition-all duration-300 transform hover:-translate-y-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{analysis.patient || 'Unknown Patient'}</h3>
-                        <p className="text-sm text-gray-600">{analysis.condition || 'Unknown Condition'}</p>
+                  <div className="p-3 sm:p-4 hover:bg-blue-50 transition-all duration-300 transform hover:-translate-y-1">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
+                      <div className="w-full sm:w-auto">
+                        <h3 className="text-sm sm:text-base font-medium text-gray-900">{analysis.patient || 'Unknown Patient'}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">{analysis.condition || 'Unknown Condition'}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <span className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                           analysis.severity === 'Mild' ? 'bg-green-100 text-green-800' :
                           analysis.severity === 'Moderate' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
                           {analysis.severity || 'Unknown'}
                         </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        <span className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                           analysis.status === 'Reviewed' ? 'bg-blue-100 text-blue-800' :
                           analysis.status === 'Needs Follow-up' ? 'bg-purple-100 text-purple-800' :
                           'bg-orange-100 text-orange-800'
@@ -586,7 +586,7 @@ const DoctorDashboard = () => {
                     </div>
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs text-gray-500">{analysis.time || 'Unknown Time'}</span>
-                      <button className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1" onClick={() => {
+                      <button className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-all" onClick={() => {
                         const patientId = analysis.patientId || analysis.id.split('_')[0];
                         navigateToPatientDashboard(patientId);
                       }}>
@@ -606,8 +606,8 @@ const DoctorDashboard = () => {
               </div>
             )}
           </div>
-          <div className="p-4 bg-gray-50 text-center">
-            <button className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1" onClick={navigateToAllPatientRecords}>
+          <div className="p-3 sm:p-4 bg-gray-50 text-center">
+            <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium transition-all hover:underline" onClick={navigateToAllPatientRecords}>
               View All Patient Records →
             </button>
           </div>
@@ -618,25 +618,25 @@ const DoctorDashboard = () => {
           {/* Today's Patients */}
           <Slide direction="right" triggerOnce>
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                <h2 className="font-semibold">Today's Patients</h2>
+              <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                <h2 className="text-sm sm:text-base font-semibold">Today's Patients</h2>
               </div>
               <div className="divide-y divide-gray-100">
                 {uniquePatients && uniquePatients.length === 0 ? (
                   <div className="p-4 text-center text-gray-500">
-                    <svg className="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                     </svg>
-                    <p className="text-sm">No patients found</p>
+                    <p className="text-xs sm:text-sm">No patients found</p>
                   </div>
                 ) : (
                     uniquePatients.slice(0, 4).map((patient, index) => (
                     <Zoom key={patient.id || index} delay={index * 100} triggerOnce>
-                      <div className="p-4 hover:bg-blue-50 transition-colors">
+                      <div className="p-3 sm:p-4 hover:bg-blue-50 transition-colors">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-medium text-gray-900">{patient.name || 'Unknown Patient'}</h3>
-                            <p className="text-sm text-gray-600">{patient.email || 'No email'}</p>
+                            <h3 className="text-sm sm:text-base font-medium text-gray-900">{patient.name || 'Unknown Patient'}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600">{patient.email || 'No email'}</p>
                             <p className="text-xs text-gray-500">Joined: {patient.createdAt ? new Date(patient.createdAt).toLocaleDateString() : 'Unknown'}</p>
                           </div>
                         </div>
@@ -651,16 +651,16 @@ const DoctorDashboard = () => {
           {/* Critical Cases Section */}
           <Slide direction="right" triggerOnce delay={200}>
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="p-4 bg-gradient-to-r from-red-500 to-red-600 text-white">
-                <h2 className="font-semibold">Critical Cases</h2>
+              <div className="p-3 sm:p-4 bg-gradient-to-r from-red-500 to-red-600 text-white">
+                <h2 className="text-sm sm:text-base font-semibold">Critical Cases</h2>
               </div>
-              <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+              <div className="divide-y divide-gray-100 max-h-64 sm:max-h-80 overflow-y-auto">
                 {recentAnalyses && recentAnalyses.filter(analysis => analysis.severity === 'Severe').length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
-                    <svg className="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-3 sm:p-4 text-center text-gray-500">
+                    <svg className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-sm">No critical cases</p>
+                    <p className="text-xs sm:text-sm">No critical cases</p>
                     <p className="text-xs text-gray-400 mt-1">All patients stable</p>
                   </div>
                 ) : (
@@ -669,14 +669,14 @@ const DoctorDashboard = () => {
                     .slice(0, 4)
                     .map((analysis, index) => (
                       <JackInTheBox key={analysis.id} delay={index * 100} triggerOnce>
-                        <div className="p-4 hover:bg-red-50 transition-all duration-300">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium text-gray-900">{analysis.patient || 'Unknown Patient'}</h3>
-                              <p className="text-sm text-gray-600">{analysis.condition || 'Unknown Condition'}</p>
+                        <div className="p-3 sm:p-4 hover:bg-red-50 transition-all duration-300">
+                          <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
+                            <div className="w-full sm:w-auto">
+                              <h3 className="text-sm sm:text-base font-medium text-gray-900">{analysis.patient || 'Unknown Patient'}</h3>
+                              <p className="text-xs sm:text-sm text-gray-600">{analysis.condition || 'Unknown Condition'}</p>
                               <p className="text-xs text-red-600 font-medium">Severe Condition</p>
                             </div>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            <span className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                               analysis.status === 'Reviewed' ? 'bg-blue-100 text-blue-800' :
                               analysis.status === 'Needs Follow-up' ? 'bg-purple-100 text-purple-800' :
                               'bg-orange-100 text-orange-800'
@@ -687,7 +687,7 @@ const DoctorDashboard = () => {
                           <div className="flex justify-between items-center mt-2">
                             <span className="text-xs text-gray-500">{analysis.time || 'Unknown Time'}</span>
                             <button 
-                              className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1" 
+                              className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-all hover:underline" 
                               onClick={() => {
                                 const patientId = analysis.patientId || analysis.id.split('_')[0];
                                 navigateToPatientDashboard(patientId);
@@ -702,8 +702,8 @@ const DoctorDashboard = () => {
                 )}
               </div>
               {recentAnalyses && recentAnalyses.filter(analysis => analysis.severity === 'Severe').length > 4 && (
-                <div className="p-4 bg-gray-50 text-center">
-                  <button className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-all transform hover:translate-x-1">
+                <div className="p-3 sm:p-4 bg-gray-50 text-center">
+                  <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium transition-all hover:underline">
                     View All Critical Cases →
                   </button>
                 </div>

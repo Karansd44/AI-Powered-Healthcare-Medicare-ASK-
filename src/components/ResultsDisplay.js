@@ -517,20 +517,20 @@ const ResultsDisplay = ({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6">
       <LocationPermissionModal />
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Diagnostic Analysis</h1>
-        <p className="text-gray-600 mt-2">Based on the symptoms you provided, here are the potential conditions.</p>
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">Diagnostic Analysis</h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-2">Based on the symptoms you provided, here are the potential conditions.</p>
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Left Column - Symptoms and Confidence */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="md:col-span-1 lg:col-span-4 space-y-4 sm:space-y-6">
           <Card className="h-fit">
-            <h3 className="font-bold text-xl mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+            <h3 className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 flex items-center">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               Identified Symptoms
@@ -562,21 +562,35 @@ const ResultsDisplay = ({
 
           {/* History Toggle for Mobile */}
           {previousAnalyses.length > 1 && (
-            <div className="lg:hidden">
+            <div className="md:hidden mt-2 mb-4">
               <Button
                 onClick={() => setShowHistory(!showHistory)}
-                className="w-full bg-gray-500 hover:bg-gray-600"
+                className="w-full bg-gray-500 hover:bg-gray-600 py-3 text-sm sm:text-base flex items-center justify-center"
               >
-                {showHistory ? 'Hide History' : 'Show Recent Health Analyses'}
+                {showHistory ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    Hide History
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                    Show Recent Health Analyses
+                  </>
+                )}
               </Button>
             </div>
           )}
         </div>
 
         {/* Middle Column - Disease Details */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="md:col-span-2 lg:col-span-5 space-y-4 sm:space-y-6">
           <Card>
-            <div className="flex space-x-2 border-b border-gray-200 mb-4 overflow-x-auto pb-2">
+            <div className="flex space-x-2 border-b border-gray-200 mb-3 sm:mb-4 overflow-x-auto pb-2">
               {results.map((result) => (
                 <button
                   key={result.disease}
@@ -585,7 +599,7 @@ const ResultsDisplay = ({
                     setDoctorResults(null);
                     setShowScheduler(false);
                   }}
-                  className={`py-2 px-4 text-sm font-medium transition-colors duration-300 whitespace-nowrap rounded-t-lg ${selectedDisease.disease === result.disease
+                  className={`py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors duration-300 whitespace-nowrap rounded-t-lg ${selectedDisease.disease === result.disease
                       ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-500'
                       : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                     }`}
@@ -626,8 +640,8 @@ const ResultsDisplay = ({
                           
                           {/* Manual Location Search Option */}
                           <div className="mt-3 border-t pt-3">
-                            <p className="text-sm text-gray-600 mb-2">Can't access your location? Search manually:</p>
-                            <div className="flex gap-2">
+                            <p className="text-xs sm:text-sm text-gray-600 mb-2">Can't access your location? Search manually:</p>
+                            <div className="flex flex-col sm:flex-row gap-2">
                               <input
                                 type="text"
                                 placeholder="Enter city, address, or area"
@@ -643,7 +657,7 @@ const ResultsDisplay = ({
                               <Button 
                                 onClick={handleManualLocationSearch} 
                                 disabled={!manualLocation.trim() || isSearchingManual}
-                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-sm"
+                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-sm whitespace-nowrap"
                               >
                                 {isSearchingManual ? 'Searching...' : 'Search'}
                               </Button>
@@ -731,10 +745,10 @@ const ResultsDisplay = ({
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
                   {doctorResults.map((hospital, i) => {
                     const mapImg = hospital.location
-                      ? `https://maps.googleapis.com/maps/api/staticmap?center=${hospital.location.lat},${hospital.location.lng}&zoom=16&size=400x200&maptype=roadmap&markers=color:red%7C${hospital.location.lat},${hospital.location.lng}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
+                      ? `https://maps.googleapis.com/maps/api/staticmap?center=${hospital.location.lat},${hospital.location.lng}&zoom=16&size=600x300&scale=2&maptype=roadmap&markers=color:red%7C${hospital.location.lat},${hospital.location.lng}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
                       : hospital.image;
                     return (
                       <motion.div
@@ -820,10 +834,10 @@ const ResultsDisplay = ({
 
         {/* Right Column - History (Desktop) */}
         {previousAnalyses.length > 1 && (
-          <div className="lg:col-span-3 space-y-6">
+          <div className="hidden md:block md:col-span-3 lg:col-span-3 space-y-4 sm:space-y-6">
             <Card>
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4 flex items-center">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                 </svg>
                 Recent Health Analyses
@@ -865,13 +879,18 @@ const ResultsDisplay = ({
 
       {/* Mobile History Panel */}
       {showHistory && previousAnalyses.length > 1 && (
-        <div className="lg:hidden mt-6">
+        <div className="md:hidden mt-4 sm:mt-6">
           <Card>
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Health Analyses</h2>
-            <div className="space-y-4 max-h-64 overflow-y-auto">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4 flex items-center">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              Recent Health Analyses
+            </h2>
+            <div className="space-y-3 sm:space-y-4 max-h-64 overflow-y-auto">
               {previousAnalyses.slice(1).map((entry, idx) => (
-                <div key={idx} className="p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={idx} className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex flex-wrap items-center justify-between mb-2">
                     <span className="text-xs text-gray-500">{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '-'}</span>
                     <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">Previous</span>
                   </div>

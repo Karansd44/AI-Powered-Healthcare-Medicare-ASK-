@@ -191,7 +191,7 @@ const Welcome = ({ onStart }) => {
           </motion.div>
           
           <motion.h1 
-            className="text-5xl md:text-6xl font-bold text-gray-800 mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-2 sm:mb-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -200,7 +200,7 @@ const Welcome = ({ onStart }) => {
           </motion.h1>
           
           <motion.p 
-            className="text-xl text-gray-600 max-w-2xl mx-auto mb-8"
+            className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto mb-6 sm:mb-8 px-4 sm:px-0"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -211,14 +211,14 @@ const Welcome = ({ onStart }) => {
 
         {/* CTA Buttons */}
         <motion.div 
-          className="flex flex-col sm:flex-row justify-center gap-4 mb-16"
+          className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 px-4 sm:px-0"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
           <Button 
             onClick={onStart} 
-            className="relative overflow-hidden group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            className="relative overflow-hidden group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <span className="relative z-10">Start Health Analysis</span>
             <motion.div 
@@ -229,7 +229,7 @@ const Welcome = ({ onStart }) => {
           
           <Button 
   onClick={() => navigate('/dashboard')} 
-  className="relative overflow-hidden group bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-white/20"
+  className="relative overflow-hidden group bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-white/20"
   whileHover={{ 
     scale: 1.05,
     transition: { duration: 0.2 }
@@ -269,7 +269,7 @@ const Welcome = ({ onStart }) => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.8 }}
         >
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20">
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl p-5 sm:p-8 border border-white/20 mx-4 sm:mx-0">
             <motion.h2 
               className="text-3xl font-bold text-gray-800 mb-8 text-center"
               initial={{ opacity: 0, y: 20 }}
