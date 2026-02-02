@@ -4,11 +4,12 @@ import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { LoadingState } from './LoadingState';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+
 import { StarIcon } from './Icons';
-import { Card, Button, Tag, CircularProgress } from './UIComponents';
+import { Card, Button, Tag } from './UIComponents';
 import { getDiseaseDescription } from '../utils/diseaseDescriptions';
 import MedicationScheduler from '../MedicationScheduler';
+
 
 const ResultsDisplay = ({
   results,
@@ -33,9 +34,10 @@ const ResultsDisplay = ({
   const [showHistory, setShowHistory] = useState(false);
   const [clinicalNote, setClinicalNote] = useState("");
   const [isEditingNote, setIsEditingNote] = useState(false);
+
   const [showFullDesc, setShowFullDesc] = useState(false);
 
-  const chartColors = ['text-blue-500', 'text-green-500', 'text-yellow-500'];
+
 
   const getSeverityColor = (severity) => {
     if (severity === 3) return "bg-red-100 text-red-800";
@@ -44,47 +46,7 @@ const ResultsDisplay = ({
   };
 
   // Loading page shown while analysis is running (when results are null/undefined)
-  const LoadingPage = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="max-w-2xl mx-auto p-8 text-center">
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white rounded-3xl p-8 shadow-2xl border border-gray-100"
-        >
-          <div className="flex items-center justify-center mb-6">
-            <motion.svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 64 64"
-              className="w-24 h-24 text-indigo-500"
-              initial={{ rotate: 0 }}
-              animate={{ rotate: [0, 12, -12, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <rect x="8" y="14" width="48" height="36" rx="6" fill="currentColor" opacity="0.08" />
-              <path d="M20 34c2-6 6-8 12-8s10 2 12 8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M32 14v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </motion.svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Analyzing symptoms</h2>
-          <p className="text-gray-600 mb-4">The AI is reviewing the symptoms and preparing possible diagnoses. This usually takes a few seconds.</p>
-          <div className="flex items-center justify-center">
-            <motion.div
-              className="flex items-center space-x-2"
-              initial={{ opacity: 0.8 }}
-              animate={{ x: [0, 8, -8, 0], opacity: [0.8, 1, 0.8, 1] }}
-              transition={{ duration: 1.6, repeat: Infinity }}
-            >
-              <div className="w-3 h-3 bg-indigo-400 rounded-full" />
-              <div className="w-3 h-3 bg-indigo-500 rounded-full" />
-              <div className="w-3 h-3 bg-indigo-600 rounded-full" />
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
+
 
   // Function to get real nearby hospitals using Google Places API
   const searchNearbyHospitals = async (specialist) => {
@@ -242,7 +204,6 @@ const ResultsDisplay = ({
       setIsSearchingManual(true);
       
       // First, geocode the location query to get coordinates
-      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(locationQuery)}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
       
       const geocodeResponse = await fetch(`http://localhost:3005/api/geocode?address=${encodeURIComponent(locationQuery)}`);
       
@@ -256,7 +217,7 @@ const ResultsDisplay = ({
         throw new Error('Location not found. Please try with a more specific address or city name.');
       }
       
-      const location = geocodeData.results[0].geometry.location;
+      const { location } = geocodeData.results[0].geometry;
       const { lat, lng } = location;
       
       // Now search for hospitals near those coordinates
@@ -425,6 +386,8 @@ const ResultsDisplay = ({
     a.click();
     URL.revokeObjectURL(url);
   };
+
+
 
   // Fetch previous analyses from Firestore for the logged-in user
   useEffect(() => {

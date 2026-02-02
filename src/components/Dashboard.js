@@ -9,23 +9,12 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { LoadingState } from "./LoadingState";
-import {
-  Fade,
-  Flip,
-  Slide,
-  Zoom,
-  Bounce,
-  Roll,
-  LightSpeed,
-  JackInTheBox,
-  Rotate
-} from 'react-awesome-reveal';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -40,7 +29,7 @@ export default function Dashboard() {
   const [previousAnalyses, setPreviousAnalyses] = useState([]);
   const [analysisFilter, setAnalysisFilter] = useState('all');
   const [analysisSort, setAnalysisSort] = useState('date');
-  const [activeTab, setActiveTab] = useState('overview');
+
 
   // Get personalized dashboard greeting
   const getPersonalizedGreeting = (userName) => {

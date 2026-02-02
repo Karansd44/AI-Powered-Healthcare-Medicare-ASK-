@@ -9,7 +9,7 @@ const Welcome = ({ onStart }) => {
   const navigate = useNavigate();
   const { currentUser, getUserType } = useAuth();
   const [currentFeature, setCurrentFeature] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
+
   
   const userType = currentUser ? getUserType() : null;
   const userName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';

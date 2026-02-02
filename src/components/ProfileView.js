@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Card } from './UIComponents';
+
 import Dashboard from './Dashboard';
 import { LoadingState } from './LoadingState';
 import { db } from '../firebase';

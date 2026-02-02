@@ -3,7 +3,7 @@ import jsPDF from 'jspdf';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { getDocs, deleteDoc } from 'firebase/firestore';
+
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -19,7 +19,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const PatientDashboardView = () => {
   const { patientId } = useParams();
-  const navigate = useNavigate();
+
   const [patientData, setPatientData] = useState(null);
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -198,9 +198,7 @@ FOLLOW-UP: Patient should monitor symptoms and follow up if condition worsens or
     }
   };
 
-  const handleViewAllAnalyses = () => {
-    navigate(`/patient/${patientId}/analyses`);
-  };
+
 
   // Function to mark analysis as reviewed
   const markAsReviewed = async (analysis, idx) => {
@@ -745,17 +743,7 @@ FOLLOW-UP: Patient should monitor symptoms and follow up if condition worsens or
               {/* View All / Show Less Toggle */}
               {dashboard.recentAnalyses.length > 3 && (
                 <div className="text-center mt-6">
-                  {!showAllAnalyses ? (
-                    <button
-                      onClick={() => setShowAllAnalyses(true)}
-                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center mx-auto"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                      View All Analyses ({dashboard.recentAnalyses.length})
-                    </button>
-                  ) : (
+                  {showAllAnalyses ? (
                     <button
                       onClick={() => setShowAllAnalyses(false)}
                       className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition-colors flex items-center justify-center mx-auto"
@@ -764,6 +752,16 @@ FOLLOW-UP: Patient should monitor symptoms and follow up if condition worsens or
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                       </svg>
                       Show Less
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowAllAnalyses(true)}
+                      className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center mx-auto"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      View All Analyses ({dashboard.recentAnalyses.length})
                     </button>
                   )}
                 </div>

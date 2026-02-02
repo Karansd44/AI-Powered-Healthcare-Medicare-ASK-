@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MicrophoneIcon } from './Icons';
 import { Card, Button } from './UIComponents';
@@ -120,7 +120,7 @@ const SymptomInput = ({ onSubmit, isAnalyzing, analysisProgress }) => {
   };
 
   // Filter suggestions based on current input
-  const filterSuggestions = (text) => {
+  const filterSuggestions = useCallback((text) => {
     if (!text.trim() || text.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -147,7 +147,7 @@ const SymptomInput = ({ onSubmit, isAnalyzing, analysisProgress }) => {
     setSuggestions(filtered);
     setShowSuggestions(filtered.length > 0);
     setSelectedSuggestionIndex(-1);
-  };
+  }, []);
 
   // Handle suggestion selection
   const handleSelectSuggestion = (suggestion) => {
@@ -208,7 +208,7 @@ const SymptomInput = ({ onSubmit, isAnalyzing, analysisProgress }) => {
   // Update suggestions when symptoms text changes
   useEffect(() => {
     filterSuggestions(symptoms);
-  }, [symptoms]);
+  }, [symptoms, filterSuggestions]);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -223,13 +223,10 @@ const SymptomInput = ({ onSubmit, isAnalyzing, analysisProgress }) => {
     recognition.lang = 'en-US';
 
     recognition.onresult = (event) => {
-      let interimTranscript = '';
       let finalTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript;
-        } else {
-          interimTranscript += event.results[i][0].transcript;
         }
       }
       setSymptoms(prev => prev + finalTranscript);

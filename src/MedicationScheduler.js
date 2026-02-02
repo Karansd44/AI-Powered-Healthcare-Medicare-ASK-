@@ -16,7 +16,7 @@ const MedicationScheduler = ({ disease, onClose }) => {
   useEffect(() => {
     const handleGeneratePlan = async () => {
       setIsLoadingPlan(true);
-      const prompt = `Act as a medical AI. For a patient with a potential diagnosis of "${disease}", suggest a typical, sample medication plan. Include 1-2 common medications, their usual dosage, and a standard time of day to take them. This is for informational purposes only. Return the response as a JSON object with a single key \"medications\" which is an array of objects. Each object should have \"name\", \"dosage\", and \"time\".`;
+      const prompt = `Act as a medical AI. For a patient with a potential diagnosis of "${disease}", suggest a typical, sample medication plan. Include 1-2 common medications, their usual dosage, and a standard time of day to take them. This is for informational purposes only. Return the response as a JSON object with a single key "medications" which is an array of objects. Each object should have "name", "dosage", and "time".`;
 
       try {
         let chatHistory = [];

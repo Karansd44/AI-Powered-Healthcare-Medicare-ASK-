@@ -11,7 +11,7 @@ const AllPatientRecords = () => {
   const [expandedPatient, setExpandedPatient] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null); // Track which patient to delete
   const [deleting, setDeleting] = useState(false);
-  const [snackbar, setSnackbar] = useState({ show: false, message: '', type: '' });
+
 
   useEffect(() => {
     async function fetchPatients() {

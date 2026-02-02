@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
-import { collection, getDocs, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 const DoctorDashboard = () => {
   // Sort and filter state for Recent Patient Analyses
@@ -11,7 +11,7 @@ const DoctorDashboard = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const { currentUser, getUserType } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [recentAnalyses, setRecentAnalyses] = useState([]);
@@ -140,13 +140,13 @@ const DoctorDashboard = () => {
 
           // Process patient analyses
           if (Array.isArray(data.previousAnalyses)) {
-            data.previousAnalyses.forEach((analysis, idx) => {
-              if (!analysis || !analysis.predictions) return;
+            for (const [idx, analysis] of data.previousAnalyses.entries()) {
+              if (!analysis || !analysis.predictions) continue;
               
               const prediction = analysis.predictions[0];
-              if (!prediction) return;
+              if (!prediction) continue;
 
-              const severity = prediction.severity;
+              const { severity } = prediction;
               const severityText = severity === 3 ? 'Severe' : 
                                  severity === 2 ? 'Moderate' : 'Mild';
 
@@ -172,7 +172,7 @@ const DoctorDashboard = () => {
                 status: analysis.status || 'Needs Review',
                 patientId: docSnap.id
               });
-            });
+            }
           }
         }
       }

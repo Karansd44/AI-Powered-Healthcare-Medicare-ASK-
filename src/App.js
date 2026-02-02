@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BrowserRouter as Router, Routes, Route, useNavigate, NavLink, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, NavLink, Navigate, useLocation } from 'react-router-dom';
 import Welcome from './components/Welcome';
 import Dashboard from './components/Dashboard';
 import SymptomInput from './components/SymptomInput';
@@ -107,7 +107,8 @@ const ProtectedRoute = ({ children }) => {
 function MediMindAppContent() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
-  const [symptomText, setSymptomText] = useState('');
+  const location = useLocation();
+  // symptomText state removed as it was unused
   const [matchedSymptoms, setMatchedSymptoms] = useState([]);
   const [predictions, setPredictions] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -118,14 +119,14 @@ function MediMindAppContent() {
   const profileDropdownRef = useRef(null);
 
   useEffect(() => {
-    if (window.location.pathname === '/') {
+    if (location.pathname === '/') {
       document.title = 'MediMind ASK';
       setShowHeart(true);
     } else {
       document.title = 'MediMind ASK';
       setShowHeart(false);
     }
-  }, [window.location.pathname]);
+  }, [location.pathname]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -157,7 +158,8 @@ function MediMindAppContent() {
 
   const handleSymptomSubmit = async (text) => {
     setIsAnalyzing(true);
-    setSymptomText(text);
+    setIsAnalyzing(true);
+    // setSymptomText(text); // Removed unused state update
     // Simulate progress for a better UX
     const progressInterval = setInterval(() => {
       setAnalysisProgress(prev => {
@@ -484,7 +486,7 @@ CRITICAL REQUIREMENTS:
   };
 
   const handleReset = () => {
-    setSymptomText('');
+
     setMatchedSymptoms([]);
     setPredictions([]);
     setHasResults(false);
